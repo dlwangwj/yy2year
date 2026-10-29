@@ -149,18 +149,26 @@ button.speak {
   word-break: break-all;
 }
 
-/* 隐藏的输入框：只用来唤起手机软键盘，字号 16px 可避免 iOS 聚焦时自动放大 */
+/* 隐藏的输入框：只用来唤起手机软键盘。移出屏幕并去掉所有外观，
+   避免在手机上露出一个输入框或光标；字号 16px 可防止 iOS 聚焦时自动放大页面 */
 .typer {
-  position: fixed;
+  position: absolute;
+  left: -9999px;
   top: 0;
-  left: 0;
   width: 1px;
   height: 1px;
-  opacity: 0;
   border: 0;
   padding: 0;
+  margin: 0;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
   font-size: 16px;
-  pointer-events: none;
+}
+
+.typer:focus {
+  outline: none;
 }
 
 .word-mask {

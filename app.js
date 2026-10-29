@@ -8,6 +8,8 @@
   let wrong = [];        // 本轮答错的单词
   let answered = false;  // 当前题是否已作答
   let typed = '';        // 当前题已输入的字母（只记字母，不含空格和标点）
+  // 隐藏输入框里常驻的零宽空格，用于让 Android 键盘的删除键产生可检测的变化
+  const SENTINEL = '​';
 
   const $ = (id) => document.getElementById(id);
 
@@ -127,7 +129,10 @@
 
   // 桌面端直接聚焦隐藏输入框；手机端需要用户点击，见 word-mask 的 click 事件
   function focusTyper() {
-    if (!answered) $('typer').focus({ preventScroll: true });
+    if (answered) return;
+    const typer = $('typer');
+    typer.value = SENTINEL;
+    typer.focus({ preventScroll: true });
   }
 
   // 只统计字母；比较时忽略大小写、空格和标点
@@ -290,33 +295,51 @@
   });
 
   // 手机端：隐藏输入框接收软键盘输入
+  // 输入框里常驻一个占位字符，这样 Android 键盘的删除键才会被识别为"删掉一个字符"
   const typer = $('typer');
+  typer.value = SENTINEL;
 
   // 点击下划线区域时聚焦隐藏输入框，弹出软键盘
   $('word-mask').addEventListener('click', () => {
-    if (!answered) typer.focus();
+    if (!answered) focusTyper();
   });
 
-  typer.addEventListener('input', () => {
-    // 取本次输入中的字母逐个加入，然后清空输入框，保证它始终为空
-    const letters = typer.value.replace(/[^A-Za-z]/g, '');
-    typer.value = '';
-    [...letters].forEach(addLetter);
-  });
+  typer.addEventListener('input', (e) => {
+    // 输入法组合中（Android 拼音/联想输入）不处理，等组合结束再取值
+    if (e.isComposing) return;
 
-  // 手机端的删除键不会产生 keydown，改用 beforeinput 处理
-  typer.addEventListener('beforeinput', (e) => {
-    if (e.inputType === 'deleteContentBackward') {
-      e.preventDefault();
+    const value = typer.value;
+    const hadSentinel = value.includes(SENTINEL);
+    // 去掉占位符后的内容
+    const body = value.replace(SENTINEL, '');
+
+    if (!hadSentinel || body.length === 0) {
+      // 占位符被删掉，或内容为空：按一次删除处理
       removeLetter();
+    } else {
+      [...body].forEach(ch => addLetter(ch));
     }
+    typer.value = SENTINEL;
   });
 
+  typer.addEventListener('compositionend', () => {
+    // 组合输入结束后，把组合出的内容按字母录入
+    const body = typer.value.replace(SENTINEL, '');
+    typer.value = SENTINEL;
+    [...body].forEach(ch => addLetter(ch));
+  });
+
+  // 删除键：部分浏览器不触发 beforeinput，统一在 keydown 里处理
   typer.addEventListener('keydown', (e) => {
-    // 电脑端在隐藏输入框上按 Enter 也要能进入下一题
     if (e.key === 'Enter') {
       e.preventDefault();
       if (answered) nextQuestion();
+      return;
+    }
+    if (e.key === 'Backspace' || e.keyCode === 8) {
+      e.preventDefault();
+      removeLetter();
+      typer.value = SENTINEL;
     }
   });
 
