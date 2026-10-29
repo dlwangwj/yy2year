@@ -149,6 +149,24 @@ button.speak {
   word-break: break-all;
 }
 
+/* 隐藏的输入框：只用来唤起手机软键盘，字号 16px 可避免 iOS 聚焦时自动放大 */
+.typer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  border: 0;
+  padding: 0;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.word-mask {
+  cursor: pointer;
+}
+
 .word-mask .slot {
   color: #9aa5b1;
 }

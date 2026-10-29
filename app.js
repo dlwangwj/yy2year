@@ -121,7 +121,13 @@
     $('show-answer').classList.remove('hidden');
     $('next').classList.add('hidden');
     renderMask();
+    focusTyper();
     speak(w.word);
+  }
+
+  // 桌面端直接聚焦隐藏输入框；手机端需要用户点击，见 word-mask 的 click 事件
+  function focusTyper() {
+    if (!answered) $('typer').focus({ preventScroll: true });
   }
 
   // 只统计字母；比较时忽略大小写、空格和标点
@@ -237,12 +243,32 @@
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  // ---------- 键盘输入 ----------
-  // 直接用键盘把字母填进下划线，不使用输入框
+  // ---------- 字母输入 ----------
+  // 键盘和手机软键盘都通过 addLetter / removeLetter 修改 typed
+  function addLetter(ch) {
+    if (answered) return;
+    const total = lettersOf(queue[index].word).length;
+    if (typed.length < total) {
+      typed += ch.toLowerCase();
+      renderMask();
+      // 字母数够了就自动提交
+      if (typed.length === total) submitAnswer();
+    }
+  }
+
+  function removeLetter() {
+    if (answered) return;
+    typed = typed.slice(0, -1);
+    renderMask();
+  }
+
+  // 电脑键盘：直接监听 keydown
   document.addEventListener('keydown', (e) => {
     if ($('quiz').classList.contains('hidden')) return;
     // 焦点在按钮上时，回车交给按钮原生的点击处理，避免重复触发
     if (e.target.tagName === 'BUTTON' && e.key === 'Enter') return;
+    // 焦点在隐藏输入框上时，由 typer 的 input 事件处理
+    if (e.target === $('typer')) return;
 
     // 作答后按 Enter 进入下一题；作答前 Enter 不做任何事
     if (e.key === 'Enter') {
@@ -251,24 +277,46 @@
       return;
     }
 
-    if (answered) return;
-
     if (e.key === 'Backspace') {
       e.preventDefault();
-      typed = typed.slice(0, -1);
-      renderMask();
+      removeLetter();
       return;
     }
 
     if (/^[a-zA-Z]$/.test(e.key)) {
       e.preventDefault();
-      const total = lettersOf(queue[index].word).length;
-      if (typed.length < total) {
-        typed += e.key.toLowerCase();
-        renderMask();
-        // 字母数够了就自动提交
-        if (typed.length === total) submitAnswer();
-      }
+      addLetter(e.key);
+    }
+  });
+
+  // 手机端：隐藏输入框接收软键盘输入
+  const typer = $('typer');
+
+  // 点击下划线区域时聚焦隐藏输入框，弹出软键盘
+  $('word-mask').addEventListener('click', () => {
+    if (!answered) typer.focus();
+  });
+
+  typer.addEventListener('input', () => {
+    // 取本次输入中的字母逐个加入，然后清空输入框，保证它始终为空
+    const letters = typer.value.replace(/[^A-Za-z]/g, '');
+    typer.value = '';
+    [...letters].forEach(addLetter);
+  });
+
+  // 手机端的删除键不会产生 keydown，改用 beforeinput 处理
+  typer.addEventListener('beforeinput', (e) => {
+    if (e.inputType === 'deleteContentBackward') {
+      e.preventDefault();
+      removeLetter();
+    }
+  });
+
+  typer.addEventListener('keydown', (e) => {
+    // 电脑端在隐藏输入框上按 Enter 也要能进入下一题
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (answered) nextQuestion();
     }
   });
 
