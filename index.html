@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新概念英语第1册 听写</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>新概念英语第1册 · 听写</h1>
+  </header>
+
+  <main>
+    <!-- 设置区：选课 -->
+    <section id="setup" class="panel">
+      <h2>选择课程</h2>
+      <div class="toolbar">
+        <button type="button" id="select-all">全选</button>
+        <button type="button" id="select-none">清空</button>
+        <span id="selected-count"></span>
+      </div>
+      <div id="lesson-list" class="lesson-grid"></div>
+
+      <div class="options">
+        <label>朗读速度
+          <select id="rate">
+            <option value="0.7">慢</option>
+            <option value="0.9" selected>正常</option>
+            <option value="1.1">快</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="shuffle"> 随机顺序</label>
+      </div>
+
+      <button type="button" id="start" class="primary">开始听写</button>
+      <p id="setup-msg" class="hint"></p>
+    </section>
+
+    <!-- 听写区 -->
+    <section id="quiz" class="panel hidden">
+      <div class="progress">
+        <span id="progress-text"></span>
+        <span id="score-text"></span>
+      </div>
+
+      <div class="prompt">
+        <button type="button" id="replay" class="speak">🔊 重听</button>
+        <p class="hint">听发音，在下方拼写单词</p>
+      </div>
+
+      <div id="word-mask" class="word-mask" aria-label="单词下划线"></div>
+      <p class="hint center">直接键入字母，输完自动提交；Backspace 删除，Enter 进入下一题</p>
+
+      <div id="feedback" class="feedback"></div>
+
+      <div class="actions">
+        <button type="button" id="show-answer">显示答案</button>
+        <button type="button" id="next" class="hidden">下一题</button>
+        <button type="button" id="quit">结束本轮</button>
+      </div>
+    </section>
+
+    <!-- 结果区 -->
+    <section id="result" class="panel hidden">
+      <h2>本轮结果</h2>
+      <p id="result-summary"></p>
+      <h3>错题</h3>
+      <ul id="wrong-list"></ul>
+      <div class="actions">
+        <button type="button" id="retry-wrong" class="primary">练习错题</button>
+        <button type="button" id="back-setup">返回选课</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="words.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
