@@ -184,6 +184,12 @@ button.speak {
   font-weight: bold;
 }
 
+/* 提示出的字母：蓝色，与用户输入的深色区分 */
+.word-mask .slot.revealed {
+  color: #2d5b8a;
+  font-weight: bold;
+}
+
 .word-mask .punct {
   color: #222;
 }

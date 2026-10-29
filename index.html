@@ -30,6 +30,14 @@
             <option value="1.1">快</option>
           </select>
         </label>
+        <label>开头提示字母
+          <select id="hint-mode">
+            <option value="0" selected>不提示</option>
+            <option value="1">1 个</option>
+            <option value="2">2 个</option>
+            <option value="3">3 个</option>
+          </select>
+        </label>
         <label><input type="checkbox" id="shuffle"> 随机顺序</label>
       </div>
 
@@ -56,6 +64,7 @@
       <div id="feedback" class="feedback"></div>
 
       <div class="actions">
+        <button type="button" id="hint">提示一个字母</button>
         <button type="button" id="show-answer">显示答案</button>
         <button type="button" id="next" class="hidden">下一题</button>
         <button type="button" id="quit">结束本轮</button>

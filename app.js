@@ -7,7 +7,8 @@
   let correct = 0;       // 答对数
   let wrong = [];        // 本轮答错的单词
   let answered = false;  // 当前题是否已作答
-  let typed = '';        // 当前题已输入的字母（只记字母，不含空格和标点）
+  let typed = '';        // 当前题已有的字母（只记字母，不含空格和标点），含提示出的字母
+  let hintLen = 0;       // typed 开头有多少个是提示出来的字母
   // 隐藏输入框里常驻的零宽空格，用于让 Android 键盘的删除键产生可检测的变化
   const SENTINEL = '​';
 
@@ -114,13 +115,18 @@
 
   function showQuestion() {
     answered = false;
-    typed = '';
     const w = queue[index];
+    const total = lettersOf(w.word).length;
+    // 按设置预先显示开头的字母，至少留一个字母给用户输入
+    const initial = parseInt($('hint-mode').value, 10) || 0;
+    hintLen = Math.max(0, Math.min(initial, total - 1));
+    typed = lettersOf(w.word).slice(0, hintLen);
     $('progress-text').textContent = `第 ${index + 1} / ${queue.length} 题`;
     $('score-text').textContent = `正确 ${correct}　错误 ${wrong.length}`;
     $('feedback').innerHTML = '';
     $('feedback').className = 'feedback';
     $('show-answer').classList.remove('hidden');
+    $('hint').classList.toggle('hidden', hintLen >= total - 1);
     $('next').classList.add('hidden');
     renderMask();
     focusTyper();
@@ -152,7 +158,7 @@
         span.className = 'slot';
         if (k < typed.length) {
           span.textContent = typed[k];
-          span.classList.add('filled');
+          span.classList.add(k < hintLen ? 'revealed' : 'filled');
         } else {
           span.textContent = '_';
         }
@@ -200,6 +206,7 @@
   }
 
   function afterAnswer() {
+    $('hint').classList.add('hidden');
     $('score-text').textContent = `正确 ${correct}　错误 ${wrong.length}`;
     $('next').classList.remove('hidden');
   }
@@ -262,9 +269,23 @@
   }
 
   function removeLetter() {
-    if (answered) return;
+    // 提示出的字母不能被删除
+    if (answered || typed.length <= hintLen) return;
     typed = typed.slice(0, -1);
     renderMask();
+  }
+
+  // 提示：再显示下一个字母，覆盖该位置上用户已输入的字母
+  function revealNext() {
+    if (answered) return;
+    const answer = lettersOf(queue[index].word);
+    if (hintLen >= answer.length - 1) return;
+    hintLen++;
+    typed = answer.slice(0, hintLen) + typed.slice(hintLen);
+    renderMask();
+    // 只剩最后一个字母时不再需要提示
+    $('hint').classList.toggle('hidden', hintLen >= answer.length - 1);
+    focusTyper();
   }
 
   // 电脑键盘：直接监听 keydown
@@ -351,6 +372,7 @@
   });
 
   $('replay').addEventListener('click', () => speak(queue[index].word));
+  $('hint').addEventListener('click', revealNext);
   $('show-answer').addEventListener('click', showAnswer);
   $('next').addEventListener('click', nextQuestion);
   $('quit').addEventListener('click', () => {
